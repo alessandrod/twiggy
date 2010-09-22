@@ -1,5 +1,5 @@
 import Levels
-
+import fnmatch
 import re
 
 __re_type = type(re.compile('foo')) # XXX is there a canonical place for this?
@@ -36,6 +36,37 @@ def regex_wrapper(regexp):
         return regexp.match(msg.text) is not None
     return wrapped
 
+def names(*names):
+    """returns a filter, which gives True if the messsage's name equals any of those provided
+
+    ``names`` will be stored as an attribute on the filter.
+
+    :arg strings names: names to match
+    """
+    names_set = set(names)
+    def set_names_filter(msg):
+        return msg.name in names_set
+    set_names_filter.names = names
+    return set_names_filter
+
+def glob_names(*names):
+    """returns a filter, which gives True if the messsage's name globs those provided
+
+    ``names`` will be stored as an attribute on the filter.
+
+    This is probably quite a bit slower than :function:`names`.
+
+    :arg strings names: glob patterns.
+    """
+    # copied from fnmatch.fnmatchcase - for speed
+    patterns = [re.compile(fnmatch.translate(pat)) for pat in names]
+    def glob_names_filter(msg):
+        return any(pat.match(msg.name) is not None for pat in patterns)
+    glob_names_filter.names = names
+    return glob_names_filter
+
+
+
 class Emitter(object):
     """
     Emits!
@@ -43,9 +74,8 @@ class Emitter(object):
     :ivar min_level: only emit if greater than this
     :type min_level: Levels.LogLevel
 
-    filter(msg) -> bool
-    should the message be emitted
 
+    .. function:: filter(msg) -> bool should_emit
     """
 
     def __init__(self, min_level, filter, outputter):

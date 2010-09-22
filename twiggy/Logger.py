@@ -11,11 +11,11 @@ import traceback
 from functools import wraps
 
 def emit(level):
-    """a decorator that emits at `level` after calling the method. The method
+    """a decorator that emits at ``level`` after calling the method. The method
     should return a Logger instance.
 
     For convenience, decorators for the various levels are available as
-    `emit.debug`, `emit.info`, etc..
+    ``emit.debug``, ``emit.info``, etc..
 
     """
     def decorator(f):
@@ -32,17 +32,21 @@ emit.error = emit(Levels.ERROR)
 emit.critical = emit(Levels.CRITICAL)
 
 class BaseLogger(object):
-    __slots__ = ['_fields', '_options', ]
+    __slots__ = ['_fields', '_options', 'min_level']
 
     __valid_options = set(Message._default_options)
 
-    def __init__(self, fields = None, options = None):
-        """Constructor for internal module use only, basically."""
-        self._fields = fields if fields is not None else {}
-        self._options = options if options is not None else Message._default_options.copy()
+    def __init__(self, fields = None, options = None, min_level = None):
+        """Constructor for internal module use only, basically.
+
+        ``fields`` and ``options`` will be copied.
+        """
+        self._fields = fields.copy() if fields is not None else {}
+        self._options = options.copy() if options is not None else Message._default_options.copy()
+        self.min_level = min_level if min_level is not None else Levels.DEBUG
 
     def _clone(self):
-        return self.__class__(self._fields.copy(), self._options.copy())
+        return self.__class__(self._fields, self._options, self.min_level)
 
     def _emit(self):
         raise NotImplementedError
@@ -92,20 +96,21 @@ class InternalLogger(BaseLogger):
 
     __slots__ = ['outputter']
 
-    __default_format = Formatter.LineFormatter(conversion=Formatter.line_conversion)
-    __default_outputter = Outputter.StreamOutputter(__default_format, stream=sys.stderr)
 
-    def __init__(self, fields = None, options = None, outputter = None):
+    def __init__(self, fields = None, options = None, min_level = None, outputter = None):
         super(InternalLogger, self).__init__(fields, options)
-        self.outputter = outputter if outputter is not None else self.__default_outputter
+        # XXX clobber this assert and make outputter mandatory?
+        assert outputter is not None
+        self.outputter = outputter
 
     def _clone(self):
-        return self.__class__(self._fields.copy(), self._options.copy(), self.outputter)
+        return self.__class__(self._fields, self._options, self.min_level, self.outputter)
 
     def _emit(self, level, format_spec = '',  *args, **kwargs):
+        if level < self.min_level: return
         try:
             try:
-                msg = Message(level, format_spec, self._fields.copy(), self._options, *args, **kwargs)
+                msg = Message(level, format_spec, self._fields.copy(), self._options.copy(), *args, **kwargs)
             except StandardError:
                 msg = None
                 raise
@@ -118,13 +123,10 @@ class InternalLogger(BaseLogger):
 
 class Logger(BaseLogger):
     """
-    :ivar min_level: only emit if message level is above this
-    :type min_level: Levels.LogLevel
-
-    :ivar filter: ..function:: filter(msg) -> bool
+    :ivar filter: .. function:: filter(msg) -> bool
     """
 
-    __slots__ = ['emitters', 'min_level', 'filter']
+    __slots__ = ['emitters', 'filter']
 
     @classmethod
     def addFeature(cls, func, name=None):
@@ -141,10 +143,9 @@ class Logger(BaseLogger):
         delattr(cls, name)
 
     def __init__(self, fields = None, options = None, emitters = None,
-                 min_level = Levels.DEBUG, filter = None):
-        super(Logger, self).__init__(fields, options)
+                 min_level = None, filter = None):
+        super(Logger, self).__init__(fields, options, min_level)
         self.emitters = emitters if emitters is not None else {}
-        self.min_level = min_level
         self.filter = filter if filter is not None else lambda format_spec: True
 
     def _clone(self):
@@ -152,7 +153,7 @@ class Logger(BaseLogger):
 
         Probably only for internal use.
         """
-        return self.__class__(self._fields.copy(), self._options.copy(),
+        return self.__class__(self._fields, self._options,
                               self.emitters, self.min_level, self.filter)
 
     @emit.info
@@ -161,25 +162,27 @@ class Logger(BaseLogger):
 
     ## Boring stuff
     def _emit(self, level, format_spec = '',  *args, **kwargs):
+        # XXX should these traps be collapsed?
         if level < self.min_level: return
 
         try:
             if not self.filter(format_spec): return
         except StandardError:
-            _twiggy.internal_log.info("Error in Logger filtering with {0!r} on {1}", self.filter, format_spec)
-            # just continue
+            _twiggy.internal_log.trace().info("Error in Logger filtering with {0!r} on {1}", self.filter, format_spec)
+            # just continue emitting in face of filter error
 
+        # XXX should we trap here too b/c of "Dictionary changed size during iteration" (or other rare errors?)
         potential_emitters = [(name, emitter) for name, emitter in self.emitters.iteritems()
                               if level >= emitter.min_level]
 
         if not potential_emitters: return
 
         try:
-            msg = Message(level, format_spec, self._fields.copy(), self._options, *args, **kwargs)
+            msg = Message(level, format_spec, self._fields.copy(), self._options.copy(), *args, **kwargs)
         except StandardError:
-            _twiggy.internal_log.info("Error formatting message level: {0!r}, format: {1!r}, fields: {2!r}, "\
+            _twiggy.internal_log.trace().info("Error formatting message level: {0!r}, format: {1!r}, fields: {2!r}, "\
                                       "options: {3!r}, args: {4!r}, kwargs: {5!r}",
-                                      level, format_spec, self._fields.copy(), self._options.copy(), args, kwargs)
+                                      level, format_spec, self._fields, self._options, args, kwargs)
             return
 
         outputters = set()
@@ -187,7 +190,7 @@ class Logger(BaseLogger):
             try:
                 include = emitter.filter(msg)
             except StandardError:
-                _twiggy.internal_log.info("Error filtering with emitter {0}. Message: {1!r}", name, msg)
+                _twiggy.internal_log.trace().info("Error filtering with emitter {0}. Message: {1!r}", name, msg)
             else:
                 if include: outputters.add(emitter._outputter)
 
