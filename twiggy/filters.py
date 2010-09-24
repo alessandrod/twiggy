@@ -1,4 +1,4 @@
-import Levels
+import levels
 import fnmatch
 import re
 
@@ -72,19 +72,19 @@ class Emitter(object):
     Emits!
 
     :ivar min_level: only emit if greater than this
-    :type min_level: Levels.LogLevel
+    :type min_level: levels.LogLevel
 
 
     .. function:: filter(msg) -> bool should_emit
     """
 
-    def __init__(self, min_level, filter, outputter):
-        if not isinstance(min_level, Levels.LogLevel):
+    def __init__(self, min_level, filter, output):
+        if not isinstance(min_level, levels.LogLevel):
             raise ValueError("Unknown min_level: {0}".format(min_level))
 
         self.min_level = min_level
         self.filter = filter
-        self._outputter = outputter
+        self._output = output
 
     @property
     def filter(self):

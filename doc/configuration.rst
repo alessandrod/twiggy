@@ -33,7 +33,7 @@ You can quickly set up using quick_setup:
 
 Controlling what comes out
 ===========================
-Filters and min_level can be changed during the runnning of an app; outputters & formatters cannot; instead, remove the emitter and create a new one.
+Filters and min_level can be changed during the runnning of an app; outputs & formats cannot; instead, remove the emitter and create a new one.
 
 You can set a min_level on Emitters.
 
@@ -53,23 +53,23 @@ INFO:Got my pants on
 Let's reset all that:
 
 >>> twiggy.emitters['*'].filter = True
->>> twiggy.emitters['*'].min_level = twiggy.Levels.DEBUG
+>>> twiggy.emitters['*'].min_level = twiggy.levels.DEBUG
 
 Create some outputs
 
 >>> import sys, copy, pprint
->>> shell_output = outputs.StreamOutputter(formats.shell_format, stream=sys.stderr)
+>>> shell_output = outputs.StreamOutput(formats.shell_format, stream=sys.stderr)
 
-.. seealso: :class:`FileOutputter`, more useful for a real config
+.. seealso: :class:`FileOutput`, more useful for a real config
 
 You can add emitters easily, using the convenience :func:`addEmitters`
 
->>> addEmitters( # tuple of: emitter_name, min_level, filter, outputter
+>>> addEmitters( # tuple of: emitter_name, min_level, filter, output
                 ("everything", levels.DEBUG, True, shell_output),
                 ("thieves", levels.INFO, filters.names("bonnie", "clyde"), shell_output))
 >>> pprint.pprint(emitters) #doctest:+ELLIPSIS
-{'everything': <twiggy.Emitter.Emitter object at 0x...>,
-'thieves': <twiggy.Emitter.Emitter object at 0x...>}
+{'everything': <twiggy.filters.Emitter object at 0x...>,
+'thieves': <twiggy.filters.Emitter object at 0x...>}
 
 .. autofunction:: twiggy.addEmitters
 
@@ -83,17 +83,17 @@ Emitter Objects
 
 Emitters
 ========
-filter + outputter
+filter + output
 
 Filters
 =======
 take mesg, return bool. names, glob_names
 
-Outputters
+Outputs
 ==========
-paired with a formatter, do work of writing
+paired with a format, do work of writing
 
-Formatter
+format
 ==========
 <mumble>
 
@@ -113,7 +113,7 @@ Your app should put it's configuration in a file called ``tiwggy_setup.py`` some
 And then somewhere near the top of your main, do::
 
     import twiggy_setup
-    twiggy_setup.setup()    
+    twiggy_setup.setup()
 
 You could import alternate modules (``twiggy_setup_prod.py``), or use alternate function names (``twiggy_setup.setup_devel()``) whatever your CMS-loving heart desires!
 
@@ -127,8 +127,8 @@ a few
 
 Log-level config
 ================
-Library should be silent by default - set :attr:`Logger.min_level` to `Levels.Disabled`
- 
+Library should be silent by default - set :attr:`Logger.min_level` to `levels.DISABLED`
+
 
 
 Logger.filter, used to turn off stupidness

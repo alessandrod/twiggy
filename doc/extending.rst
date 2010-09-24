@@ -8,7 +8,7 @@ the :data:`~twiggy.devel_log`
 Internals
 *******************
 
-.. autoclass:: twiggy.Logger.Logger
+.. autoclass:: twiggy.logger.Logger
     :members:
     :inherited-members:
 
@@ -18,12 +18,12 @@ Writing Features
 How to do that
 
 *******************
-Writing Outputters
+Writing Outputs
 *******************
 How to do that
 
 *******************
-Writing Formatters
+Writing formats
 *******************
 How to do that, including :class:`~twiggy.lib.ConversionTable`
 

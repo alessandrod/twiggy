@@ -3,13 +3,13 @@ import threading
 import sys
 import atexit
 
-class Outputter(object):
+class Output(object):
     """
     Does the work of formatting and writing a message.
 
     Multiple implementations are expected.
 
-    Outputters transparently support asynchronous logging using the
+    Outputs transparently support asynchronous logging using the
     multiprocessing module. This is off by default, as it can cause log
     messages to be dropped. See the msgBuffer argument.
 
@@ -18,7 +18,7 @@ class Outputter(object):
     integer means an unlimited buffer, a positive integer is the size
     of the buffer.
 
-    :arg format: a callable (probably a Formatter) taking a Message and
+    :arg format: a callable (probably a Format) taking a Message and
     formatting it for output.
 
     :cvar use_locks: use locks when running in a synchronous,
@@ -88,8 +88,8 @@ class Outputter(object):
         self.__queue.close()
         self.__queue.join()
 
-class NullOutputter(object):
-    """An duck-typed outputter that just discards its messages"""
+class NullOutput(object):
+    """An duck-typed output that just discards its messages"""
 
     def output(self, msg):
         pass
@@ -97,7 +97,7 @@ class NullOutputter(object):
     def close(self):
         pass
 
-class FileOutputter(Outputter):
+class FileOutput(Output):
     """Output to file
 
     ``name``, ``mode``, ``buffering`` are passed to ``open(..)``
@@ -106,7 +106,7 @@ class FileOutputter(Outputter):
         self.filename = name
         self.mode = mode
         self.buffering = buffering
-        super(FileOutputter, self).__init__(format, msgBuffer)
+        super(FileOutput, self).__init__(format, msgBuffer)
 
     def _open(self):
         self.file = open(self.filename, self.mode, self.buffering)
@@ -117,11 +117,11 @@ class FileOutputter(Outputter):
     def _write(self, x):
         self.file.write(x)
 
-class StreamOutputter(Outputter):
+class StreamOutput(Output):
     """Output to an externally-managed stream."""
     def __init__(self, format, stream=sys.stderr):
         self.stream = stream
-        super(StreamOutputter, self).__init__(format)
+        super(StreamOutput, self).__init__(format)
 
     def _open(self):
         pass

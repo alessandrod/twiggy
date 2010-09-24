@@ -4,12 +4,12 @@ Loggers!
 
 """
 
-from .Message import Message
+from .message import Message
 from .lib import iso8601time
 import twiggy as _twiggy
-import Levels
-import Outputter
-import Formatter
+import levels
+import outputs
+import formats
 
 import sys
 import time
@@ -31,11 +31,11 @@ def emit(level):
         return wrapper
     return decorator
 
-emit.debug = emit(Levels.DEBUG)
-emit.info = emit(Levels.INFO)
-emit.warning = emit(Levels.WARNING)
-emit.error = emit(Levels.ERROR)
-emit.critical = emit(Levels.CRITICAL)
+emit.debug = emit(levels.DEBUG)
+emit.info = emit(levels.INFO)
+emit.warning = emit(levels.WARNING)
+emit.error = emit(levels.ERROR)
+emit.critical = emit(levels.CRITICAL)
 
 class BaseLogger(object):
     __slots__ = ['_fields', '_options', 'min_level']
@@ -49,7 +49,7 @@ class BaseLogger(object):
         """
         self._fields = fields.copy() if fields is not None else {}
         self._options = options.copy() if options is not None else Message._default_options.copy()
-        self.min_level = min_level if min_level is not None else Levels.DEBUG
+        self.min_level = min_level if min_level is not None else levels.DEBUG
 
     def _clone(self):
         return self.__class__(self._fields, self._options, self.min_level)
@@ -84,37 +84,37 @@ class BaseLogger(object):
 
     ## Do something
     def debug(self, *args, **kwargs):
-        self._emit(Levels.DEBUG, *args, **kwargs)
+        self._emit(levels.DEBUG, *args, **kwargs)
 
     def info(self, *args, **kwargs):
-        self._emit(Levels.INFO, *args, **kwargs)
+        self._emit(levels.INFO, *args, **kwargs)
 
     def warning(self, *args, **kwargs):
-        self._emit(Levels.WARNING, *args, **kwargs)
+        self._emit(levels.WARNING, *args, **kwargs)
 
     def error(self, *args, **kwargs):
-        self._emit(Levels.ERROR, *args, **kwargs)
+        self._emit(levels.ERROR, *args, **kwargs)
 
     def critical(self, *args, **kwargs):
-        self._emit(Levels.CRITICAL, *args, **kwargs)
+        self._emit(levels.CRITICAL, *args, **kwargs)
 
 class InternalLogger(BaseLogger):
     """
-    :ivar outputter: an outputtter to write to
-    :type outputter: Outputter
+    :ivar output: an outputtter to write to
+    :type output: Output
     """
 
-    __slots__ = ['outputter']
+    __slots__ = ['output']
 
 
-    def __init__(self, fields = None, options = None, min_level = None, outputter = None):
+    def __init__(self, fields = None, options = None, min_level = None, output = None):
         super(InternalLogger, self).__init__(fields, options)
-        # XXX clobber this assert and make outputter mandatory?
-        assert outputter is not None
-        self.outputter = outputter
+        # XXX clobber this assert and make output mandatory?
+        assert output is not None
+        self.output = output
 
     def _clone(self):
-        return self.__class__(self._fields, self._options, self.min_level, self.outputter)
+        return self.__class__(self._fields, self._options, self.min_level, self.output)
 
     def _emit(self, level, format_spec = '',  *args, **kwargs):
         if level < self.min_level: return
@@ -125,7 +125,7 @@ class InternalLogger(BaseLogger):
                 msg = None
                 raise
             else:
-                self.outputter.output(msg)
+                self.output.output(msg)
         except StandardError:
             print>>sys.stderr, iso8601time(), "Error in twiggy internal log! Something is serioulsy broken."
             print>>sys.stderr, "Offending message:", repr(msg)
@@ -195,16 +195,16 @@ class Logger(BaseLogger):
                                       level, format_spec, self._fields, self._options, args, kwargs)
             return
 
-        outputters = set()
+        outputs = set()
         for name, emitter in potential_emitters:
             try:
                 include = emitter.filter(msg)
             except StandardError:
                 _twiggy.internal_log.trace().info("Error filtering with emitter {0}. Message: {1!r}", name, msg)
             else:
-                if include: outputters.add(emitter._outputter)
+                if include: outputs.add(emitter._output)
 
-        for o in outputters:
+        for o in outputs:
             try:
                 o.output(msg)
             except StandardError:

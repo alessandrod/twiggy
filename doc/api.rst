@@ -5,14 +5,14 @@ API Reference
 .. automodule:: twiggy
     :members:
     :show-inheritance:
-    
 
 
-.. automodule:: twiggy.Logger
+
+.. automodule:: twiggy.logger
     :members:
     :show-inheritance:
-    
 
-.. automodule:: twiggy.Levels
+
+.. automodule:: twiggy.levels
     :members:
     :show-inheritance:

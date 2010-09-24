@@ -18,13 +18,13 @@ In your main.py:
 ****************
 Logging Messages
 ****************
-The main interface is the the magic :class:`log <twiggy.Logger.Logger>`.
+The main interface is the the magic :class:`log <twiggy.logger.Logger>`.
 
 >>> from twiggy import log
 >>> log #doctest:+ELLIPSIS
-<twiggy.Logger.Logger object at 0x...>
+<twiggy.logger.Logger object at 0x...>
 
-It works out of the box, using typical :mod:`levels <Levels>`. Arbitrary levels are *not* supported. Note that when logging, you never need to refer to any level object; just use the methods on the log.
+It works out of the box, using typical :mod:`levels <levels>`. Arbitrary levels are *not* supported. Note that when logging, you never need to refer to any level object; just use the methods on the log.
 
 >>> log.debug('You may not care')
 DEBUG:You may not care
@@ -107,7 +107,7 @@ INFO:donjuan:pants=sexy:hello, ladies want to dance?
 *************************
 Sample Log
 *************************
-Routed to a `file <.FileOutputter>`, the above produces the following::
+Routed to a `file <.FileOutput>`, the above produces the following::
 
     2010-03-28T14:23:34:DEBUG:You may not care
     2010-03-28T14:23:34:ERROR:OMFG! Pants on fire!

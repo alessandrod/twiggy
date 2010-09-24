@@ -1,11 +1,11 @@
-import twiggy.Emitter
+import twiggy.filters
 
 import tempfile
 import os
 
 fname = tempfile.mktemp()
 
-twiggy.quick_setup(twiggy.Levels.DEBUG, fname)
+twiggy.quick_setup(twiggy.levels.DEBUG, fname)
 import timeit
 
 loops = 100000
