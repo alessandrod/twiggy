@@ -1,6 +1,7 @@
 __all__=['log', 'emitters', 'addEmitters', 'devel_log', 'filters', 'formats', 'outputs', 'levels', 'quickSetup']
 import time
 import sys
+import os
 
 import logger
 import filters
@@ -8,19 +9,38 @@ import formats
 import outputs
 import levels
 
-## a useful default fields
-__fields = {'time':time.gmtime}
 
-log = logger.Logger(__fields)
+## globals creation is wrapped in a function so that we can do sane testing
+def _populate_globals():
+    global __fields, log, emitters, __internal_format, __internal_output, internal_log, devel_log
 
-emitters = log._emitters
+    try:
+        log
+    except NameError:
+        pass
+    else:
+        raise RuntimeError("Attempted to populate globals twice")
 
-__internal_format = formats.LineFormat(conversion = formats.line_conversion)
-__internal_output = outputs.StreamOutput(format = __internal_format, stream=sys.stderr)
+    ## a useful default fields
+    __fields = {'time':time.gmtime}
 
-internal_log = logger.InternalLogger(fields = __fields, output=__internal_output).name('twiggy.internal').trace('error')
+    log = logger.Logger(__fields)
 
-devel_log = logger.InternalLogger(fields = __fields, output = outputs.NullOutput()).name('twiggy.devel')
+    emitters = log._emitters
+
+    __internal_format = formats.LineFormat(conversion = formats.line_conversion)
+    __internal_output = outputs.StreamOutput(format=__internal_format, stream=sys.stderr)
+
+    internal_log = logger.InternalLogger(fields = __fields, output=__internal_output).name('twiggy.internal').trace('error')
+
+    devel_log = logger.InternalLogger(fields = __fields, output = outputs.NullOutput()).name('twiggy.devel')
+
+def _del_globals():
+    global __fields, log, emitters, __internal_format, __internal_output, internal_log, devel_log
+    del __fields, log, emitters, __internal_format, __internal_output, internal_log, devel_log
+
+if 'TWIGGY_UNDER_TEST' not in os.environ: # pragma: no cover
+    _populate_globals()
 
 def quickSetup(min_level=levels.DEBUG, file = None, msg_buffer = 0):
     """Quickly set up `emitters`.

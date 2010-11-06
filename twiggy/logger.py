@@ -5,6 +5,7 @@ import levels
 import outputs
 import formats
 
+import warnings
 import sys
 import time
 import traceback
@@ -123,7 +124,7 @@ class InternalLogger(BaseLogger):
 
 
     def __init__(self, output, fields = None, options = None, min_level = None):
-        super(InternalLogger, self).__init__(fields, options)
+        super(InternalLogger, self).__init__(fields, options, min_level)
         self.output = output
 
     def _clone(self):
@@ -162,6 +163,7 @@ class Logger(BaseLogger):
         :arg func: the function to add
         :arg string name: the name to add it under. If None, use the function's name.
         """
+        warnings.warn("Use of features is currently discouraged, pending refactoring", RuntimeWarning)
         name = name if name is not None else func.__name__
         setattr(cls, name, func)
 
@@ -173,6 +175,7 @@ class Logger(BaseLogger):
 
         :arg string name: the name of the feature to disable.
         """
+        warnings.warn("Use of features is currently discouraged, pending refactoring", RuntimeWarning)
         # get func directly from class dict - we don't want an unbound method.
         setattr(cls, name, cls.__dict__['_feature_noop'])
 
@@ -182,6 +185,7 @@ class Logger(BaseLogger):
 
         :arg string name: the name of the feature to remove
         """
+        warnings.warn("Use of features is currently discouraged, pending refactoring", RuntimeWarning)
         delattr(cls, name)
 
     def __init__(self, fields = None, options = None, emitters = None,
@@ -227,7 +231,7 @@ class Logger(BaseLogger):
         try:
             if not self.filter(format_spec): return
         except StandardError:
-            _twiggy.internal_log.info("Error in Logger filtering with {0!r} on {1}", self.filter, format_spec)
+            _twiggy.internal_log.info("Error in Logger filtering with {0} on {1}", repr(self.filter), format_spec)
             # just continue emitting in face of filter error
 
         # XXX should we trap here too b/c of "Dictionary changed size during iteration" (or other rare errors?)
@@ -246,13 +250,16 @@ class Logger(BaseLogger):
             return
 
         outputs = set()
-        for name, emitter in potential_emitters:
+        # sort to make things deterministic (for tests, mainly)
+        for name, emitter in sorted(potential_emitters):
             try:
                 include = emitter.filter(msg)
             except StandardError:
-                _twiggy.internal_log.info("Error filtering with emitter {}. Message: {1!r}", name, msg)
-            else:
-                if include: outputs.add(emitter._output)
+                _twiggy.internal_log.info("Error filtering with emitter {}. Filter: {} Message: {!r}",
+                                          name, repr(emitter.filter), msg)
+                include = True # output anyway if error
+            
+            if include: outputs.add(emitter._output)
 
         for o in outputs:
             try:

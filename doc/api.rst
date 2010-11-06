@@ -369,7 +369,7 @@ Outputs
 *************************
 .. module:: twiggy.outputs
 
-.. class:: Output(format=None)
+.. class:: Output(format=None, close_atexit=True)
 
     .. attribute:: _format
 
@@ -380,6 +380,10 @@ Outputs
         Class variable, indicating that locks should be used when running in a synchronous, multithreaded environment. Threadsafe subclasses may disable locking for higher throughput. Defaults to True.
 
     .. automethod:: __init__
+    
+    .. method:: close
+        
+        Finalize the output.
 
     The following methods should be implemented by subclasses.
 
@@ -407,4 +411,4 @@ Outputs
 
 .. autoclass:: NullOutput
 
-.. autoclass:: DequeOutput
+.. autoclass:: ListOutput
