@@ -54,7 +54,7 @@ def quick_setup(min_level=levels.DEBUG, file = None, msg_buffer = 0):
         file = sys.stderr
 
     if file is sys.stderr or file is sys.stdout:
-        output = outputs.StreamOutput(formats.shell_format, stream=file)
+        output = outputs.StreamOutput(formats.shell_format, stream=file, msg_buffer=msg_buffer)
     else:
         output = outputs.FileOutput(file, format=formats.line_format, msg_buffer=msg_buffer, mode='a')
 

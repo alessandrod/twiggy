@@ -20,7 +20,7 @@ class Output(object):
         """
         self._format = format if format is not None else self._noop_format
         self._sync_init()
-        
+
         if close_atexit: #pragma: no cover
             atexit.register(self.close)
 
@@ -59,6 +59,7 @@ class Output(object):
         x = self._format(msg)
         self._write(x)
 
+
 class AsyncOutput(Output):
     """An `.Output` with support for asynchronous logging"""
 
@@ -68,7 +69,7 @@ class AsyncOutput(Output):
             self._sync_init()
         else:
             self._async_init(msg_buffer, close_atexit)
-        
+
         if close_atexit: #pragma: no cover
             atexit.register(self.close)
 
@@ -83,7 +84,7 @@ class AsyncOutput(Output):
 
     # use a plain function so Windows is cool
     @staticmethod
-    def __child_main(self):            
+    def __child_main(self):
         self._open()
         while True:
             # XXX should _close() be in a finally: ?
@@ -122,11 +123,12 @@ class NullOutput(Output):
     def _close(self):
         pass
 
+
 class ListOutput(Output):
     """an output that stuffs messages in a list
-    
+
     Useful for unittesting.
-    
+
     :ivar list messages: messages that have been emitted
     """
 
@@ -162,11 +164,12 @@ class FileOutput(AsyncOutput):
     def _write(self, x):
         self.file.write(x)
 
-class StreamOutput(Output):
+
+class StreamOutput(AsyncOutput):
     """Output to an externally-managed stream."""
-    def __init__(self, format, stream=sys.stderr):
+    def __init__(self, format, stream=sys.stderr, msg_buffer=0):
         self.stream = stream
-        super(StreamOutput, self).__init__(format, False) # close_atexit makes no sense here
+        super(StreamOutput, self).__init__(format, msg_buffer, close_atexit=False)
 
     def _open(self):
         pass
