@@ -42,21 +42,24 @@ def _del_globals():
 if 'TWIGGY_UNDER_TEST' not in os.environ: # pragma: no cover
     _populate_globals()
 
-def quick_setup(min_level=levels.DEBUG, file = None, msg_buffer = 0):
+def quick_setup(min_level=levels.DEBUG, file=None, msg_buffer=0, use_shell_format=False):
     """Quickly set up `emitters`.
 
     :arg `.LogLevel` min_level: lowest message level to cause output
     :arg string file: filename to log to, or ``sys.stdout``, or ``sys.stderr``. ``None`` means standard error.
     :arg int msg_buffer: number of messages to buffer, see `.outputs.AsyncOutput.msg_buffer`
+    :arg bool use_shell_format: whether to use default shell_format or line_format, see `.formats`
     """
 
     if file is None:
         file = sys.stderr
 
+    format = formats.shell_format if use_shell_format else formats.line_format
+
     if file is sys.stderr or file is sys.stdout:
-        output = outputs.StreamOutput(formats.shell_format, stream=file, msg_buffer=msg_buffer)
+        output = outputs.StreamOutput(format, stream=file, msg_buffer=msg_buffer)
     else:
-        output = outputs.FileOutput(file, format=formats.line_format, msg_buffer=msg_buffer, mode='a')
+        output = outputs.FileOutput(file, format=format, msg_buffer=msg_buffer, mode='a')
 
     emitters['*'] = filters.Emitter(min_level, True, output)
 
