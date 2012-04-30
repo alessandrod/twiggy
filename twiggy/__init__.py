@@ -1,5 +1,5 @@
 __all__=['log', 'emitters', 'add_emitters', 'devel_log', 'filters', 'formats', 'outputs', 'levels', 'quick_setup']
-import time
+from datetime import datetime
 import sys
 import os
 
@@ -22,7 +22,7 @@ def _populate_globals():
         raise RuntimeError("Attempted to populate globals twice")
 
     ## a useful default fields
-    __fields = {'time':time.gmtime}
+    __fields = {'time':datetime.utcnow}
 
     log = logger.Logger(__fields)
 

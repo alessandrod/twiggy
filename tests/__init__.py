@@ -1,10 +1,10 @@
-import time
+from datetime import datetime
 
 from twiggy.message import Message
 import twiggy
 
 # an arbitrary but consistent time
-when = time.struct_time((2010, 10, 28, 2, 15, 57, 3, 301, 0))
+when = datetime(2010, 10, 28, 2, 15, 57, 301)
 
 def make_mesg():
     return Message(twiggy.levels.DEBUG,

@@ -1,5 +1,5 @@
 import threading
-import time
+from datetime import datetime
 
 def thread_name():
     """return the name of the current thread"""
@@ -7,9 +7,7 @@ def thread_name():
 
 def iso8601time(gmtime = None):
     """convert time to ISO 8601 format - it sucks less!
-    
-    :arg time.struct_time gmtime: time tuple. If None, use ``time.gmtime()`` (UTC) 
-    
-    XXX timezone is not supported
+
+    :arg datetime: datetime object. If None, use ``datetime.utcnow()``
     """
-    return time.strftime("%Y-%m-%dT%H:%M:%SZ", gmtime if gmtime is not None else time.gmtime())
+    return gmtime.isoformat() if gmtime else datetime.utcnow().isoformat()
