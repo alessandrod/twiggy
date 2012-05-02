@@ -79,7 +79,7 @@ class AsyncOutput(Output):
         self.close = self.__async_close
         self.__queue = multiprocessing.JoinableQueue(msg_buffer)
         self.__child = multiprocessing.Process(target=self.__child_main, args=(self,))
-        self.__child.daemon = not close_atexit
+        self.__child.daemon = True # need to force this, otherwise the child processes created are left hanging
         self.__child.start()
 
     # use a plain function so Windows is cool
