@@ -169,7 +169,7 @@ class StreamOutput(AsyncOutput):
     """Output to an externally-managed stream."""
     def __init__(self, format, stream=sys.stderr, msg_buffer=0):
         self.stream = stream
-        super(StreamOutput, self).__init__(format, msg_buffer, close_atexit=False)
+        super(StreamOutput, self).__init__(format, msg_buffer, close_atexit=True)
 
     def _open(self):
         pass
