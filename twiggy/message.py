@@ -7,7 +7,7 @@ from string import Template
 class Message(object):
     """A log message.  All attributes are read-only."""
 
-    __slots__ = ['fields', 'suppress_newlines', 'traceback', 'text']
+    __slots__ = ['fields', 'suppress_newlines', 'traceback', 'text', 'exc_info']
 
     #: default option values. Don't change these!
     _default_options = {'suppress_newlines' : True,
@@ -34,14 +34,17 @@ class Message(object):
         ## format traceback
         # XXX this needs some cleanup/branch consolidation
         trace = options['trace']
+        self.exc_info = None
         if isinstance(trace, tuple) and len(trace) == 3:
             self.traceback = "\n".join(traceback.format_exception(*trace))
+            self.exc_info = trace
         elif trace == "error":
             tb = sys.exc_info()
             if tb[0] is None:
                 self.traceback = None
             else:
                 self.traceback = traceback.format_exc()
+                self.exc_info = tb
         elif trace == "always":
             raise NotImplementedError
             # XXX build a traceback using getframe
